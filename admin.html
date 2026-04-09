@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Admin Panel</title>
+    <style>
+        body {
+            background: #0A0A0A;
+            color: white;
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .review-item {
+            background: #111;
+            border: 1px solid #ff4444;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #cc3333;
+        }
+
+        .refresh-btn {
+            background: #444;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Review moderation</h1>
+    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh the page</button>
+    <div id="adminContainer"></div>
+
+    <script>
+        let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+
+        function renderAdmin() {
+            const container = document.getElementById("adminContainer");
+            container.innerHTML = "";
+            const pendingReviews = reviews.filter(r => !r.approved);
+            if (pendingReviews.length === 0) {
+                container.innerHTML = "<p>There are no reviews for moderation</p>";
+                return;
+            }
+            pendingReviews.forEach((review, idx) => {
+                const realIndex = reviews.findIndex(r => r === review);
+                const div = document.createElement("div");
+                div.className = "review-item";
+                div.innerHTML = `
+                    <strong>${escapeHtml(review.name)}</strong>
+                    <p>${escapeHtml(review.text)}</p>
+                    <button onclick="approveReview(${realIndex})">✅</button>
+                    <button onclick="deleteReview(${realIndex})">❌</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function approveReview(index) {
+            reviews[index].approved = true;
+            localStorage.setItem("reviews", JSON.stringify(reviews));
+            localStorage.setItem("needRefresh", "true"); 
+            renderAdmin();
+        }
+
+        function deleteReview(index) {
+            reviews.splice(index, 1);
+            localStorage.setItem("reviews", JSON.stringify(reviews));
+            localStorage.setItem("needRefresh", "true"); 
+            renderAdmin();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function (m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        renderAdmin();
+    </script>
+</body>
+
+</html>
